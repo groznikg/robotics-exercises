@@ -14,24 +14,24 @@ class ShipSimulator:
     DT_H          = 1.0 / 60.0 # time step: 1 minute in hours
     ARRIVAL_KM    = 0.5         # arrival threshold [km]
 
-    def __init__(self, ax: float, ay: float,
-                 bx: float, by: float,
-                 phi0: float,
+    def __init__(self, start_x: float, start_y: float,
+                 goal_x: float, goal_y: float,
+                 initial_heading_deg: float,
                  wind: WindData) -> None:
-        self.ax, self.ay = ax, ay
-        self.bx, self.by = bx, by
+        self.start_x, self.start_y = start_x, start_y
+        self.goal_x,  self.goal_y  = goal_x,  goal_y
         self.wind = wind
 
         # State
-        self.x, self.y = ax, ay
-        self.phi = phi0
-        self.v   = 0.0
-        self.t   = 0
+        self.x, self.y       = start_x, start_y
+        self.heading_deg     = initial_heading_deg
+        self.engine_speed_kmh = 0.0
+        self.elapsed_min     = 0
 
     @staticmethod
-    def _angle_diff(target: float, current: float) -> float:
+    def _angle_diff(target_deg: float, current_deg: float) -> float:
         """Signed shortest difference (target - current) in (-180, +180]."""
-        return ((target - current + 180.0) % 360.0) - 180.0
+        return ((target_deg - current_deg + 180.0) % 360.0) - 180.0
 
     @staticmethod
     def _stopping_distance_km(speed_kmh: float) -> float:
@@ -39,16 +39,17 @@ class ShipSimulator:
         return speed_kmh * (speed_kmh + ShipSimulator.MAX_ACCEL) / (2.0 * ShipSimulator.MAX_ACCEL * 60.0)
 
     def _line_deviation_km(self) -> float:
-        """Perpendicular distance from current position to the A-B line [km]."""
-        px, py = self.x, self.y
-        ax, ay, bx, by = self.ax, self.ay, self.bx, self.by
-        ab = math.hypot(bx - ax, by - ay)
-        if ab == 0.0:
-            return math.hypot(px - ax, py - ay)
-        return abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / ab
+        """Perpendicular distance from current position to the start-goal line [km]."""
+        route_length_km = math.hypot(self.goal_x - self.start_x, self.goal_y - self.start_y)
+        if route_length_km == 0.0:
+            return math.hypot(self.x - self.start_x, self.y - self.start_y)
+        return abs(
+            (self.goal_x - self.start_x) * (self.start_y - self.y)
+            - (self.start_x - self.x) * (self.goal_y - self.start_y)
+        ) / route_length_km
 
     def _make_table_header(self) -> tuple[str, str, str]:
-        col = [
+        columns = [
             ("Čas",             "[min]",    10),
             ("Pozicija X",      "[100 km]", 12),
             ("Pozicija Y",      "[100 km]", 12),
@@ -58,93 +59,96 @@ class ShipSimulator:
             ("Razdalja do B",   "[100 km]", 14),
             ("Odmik od trase",  "[100 km]", 15),
         ]
-        header = "  ".join(f"{name:>{w}}" for name, _, w in col)
-        units  = "  ".join(f"{unit:>{w}}" for _, unit, w in col)
-        sep    = "-" * len(header)
-        return header, units, sep
+        header    = "  ".join(f"{name:>{width}}" for name, _, width in columns)
+        units     = "  ".join(f"{unit:>{width}}" for _, unit, width in columns)
+        separator = "-" * len(header)
+        return header, units, separator
 
-    def _format_row(self, dist: float, dev: float, actual_speed: float) -> str:
-        vals = [self.t, self.x/100, self.y/100, self.v, actual_speed,
-                self.phi, dist/100, dev/100]
+    def _format_row(self, distance_km: float, deviation_km: float, ground_speed_kmh: float) -> str:
+        vals = [self.elapsed_min, self.x/100, self.y/100, self.engine_speed_kmh,
+                ground_speed_kmh, self.heading_deg, distance_km/100, deviation_km/100]
         fmts = [">10d", ">12.4f", ">12.4f", ">10.2f", ">16.2f",
                 ">8.1f", ">14.5f", ">15.6f"]
-        return "  ".join(format(val, f) for val, f in zip(vals, fmts))
+        return "  ".join(format(val, fmt) for val, fmt in zip(vals, fmts))
 
     def _step(self) -> float:
         """Advance state by one minute. Returns actual ground speed [km/h]."""
-        bx, by = self.bx, self.by
+        # 1. Desired heading toward goal
+        desired_heading_deg = math.degrees(
+            math.atan2(self.goal_y - self.y, self.goal_x - self.x)
+        )
 
-        # 1. Desired heading toward B
-        desired_phi = math.degrees(math.atan2(by - self.y, bx - self.x))
-
-        # 2. Turn toward desired heading (max MAX_TURN_RATE deg/min)
-        turn     = max(-self.MAX_TURN_RATE,
-                       min(self.MAX_TURN_RATE, self._angle_diff(desired_phi, self.phi)))
-        self.phi = (self.phi + turn) % 360.0
+        # 2. Turn toward desired heading (capped at MAX_TURN_RATE deg/min)
+        turn_deg         = max(-self.MAX_TURN_RATE,
+                               min(self.MAX_TURN_RATE,
+                                   self._angle_diff(desired_heading_deg, self.heading_deg)))
+        self.heading_deg = (self.heading_deg + turn_deg) % 360.0
 
         # 3. Wind at current time
-        wx, wy = self.wind.vector_at(self.t)
+        wind_x, wind_y = self.wind.vector_at(self.elapsed_min)
 
         # 4. Speed control
-        phi_rad  = math.radians(self.phi)
-        tailwind = wx * math.cos(phi_rad) + wy * math.sin(phi_rad)
-        v_ground = self.v + tailwind
-        dist     = math.hypot(bx - self.x, by - self.y)
-        if self._stopping_distance_km(max(0.0, v_ground)) >= dist:
-            min_v    = max(0.0, -tailwind + 1.0)
-            self.v   = max(min_v, self.v - self.MAX_ACCEL)
+        heading_rad      = math.radians(self.heading_deg)
+        tailwind_kmh     = wind_x * math.cos(heading_rad) + wind_y * math.sin(heading_rad)
+        forward_speed_kmh = self.engine_speed_kmh + tailwind_kmh
+        distance_km      = math.hypot(self.goal_x - self.x, self.goal_y - self.y)
+        if self._stopping_distance_km(max(0.0, forward_speed_kmh)) >= distance_km:
+            min_engine_speed_kmh  = max(0.0, -tailwind_kmh + 1.0)
+            self.engine_speed_kmh = max(min_engine_speed_kmh,
+                                        self.engine_speed_kmh - self.MAX_ACCEL)
         else:
-            self.v = min(self.MAX_SPEED_KMH, self.v + self.MAX_ACCEL)
+            self.engine_speed_kmh = min(self.MAX_SPEED_KMH,
+                                        self.engine_speed_kmh + self.MAX_ACCEL)
 
         # 5. Update position
-        vx_total     = self.v * math.cos(phi_rad) + wx
-        vy_total     = self.v * math.sin(phi_rad) + wy
-        actual_speed = math.hypot(vx_total, vy_total)
-        self.x      += vx_total * self.DT_H
-        self.y      += vy_total * self.DT_H
-        self.t      += 1
+        total_vx      = self.engine_speed_kmh * math.cos(heading_rad) + wind_x
+        total_vy      = self.engine_speed_kmh * math.sin(heading_rad) + wind_y
+        ground_speed_kmh = math.hypot(total_vx, total_vy)
+        self.x          += total_vx * self.DT_H
+        self.y          += total_vy * self.DT_H
+        self.elapsed_min += 1
 
-        return actual_speed
+        return ground_speed_kmh
 
     def run(self, log_path: str) -> None:
         """Run the simulation and write results to log_path and stdout."""
-        header, units, sep = self._make_table_header()
-        actual_speed = 0.0
-        last_print_t = -1
+        header, units, separator = self._make_table_header()
+        ground_speed_kmh = 0.0
+        last_logged_min  = -1
 
         with open(log_path, "w", encoding="utf-8") as log:
-            for line in (header, units, sep):
+            for line in (header, units, separator):
                 log.write(line + "\n")
                 print(line)
 
             while True:
-                dist = math.hypot(self.bx - self.x, self.by - self.y)
-                dev  = self._line_deviation_km()
+                distance_km  = math.hypot(self.goal_x - self.x, self.goal_y - self.y)
+                deviation_km = self._line_deviation_km()
 
-                if self.t != last_print_t:
-                    row = self._format_row(dist, dev, actual_speed)
+                if self.elapsed_min != last_logged_min:
+                    row = self._format_row(distance_km, deviation_km, ground_speed_kmh)
                     log.write(row + "\n")
-                    if self.t % 60 == 0 or dist < self.ARRIVAL_KM:
+                    if self.elapsed_min % 60 == 0 or distance_km < self.ARRIVAL_KM:
                         print(row)
-                    last_print_t = self.t
+                    last_logged_min = self.elapsed_min
 
-                if dist < self.ARRIVAL_KM:
+                if distance_km < self.ARRIVAL_KM:
                     break
 
-                actual_speed = self._step()
+                ground_speed_kmh = self._step()
 
-                if self.t > 500_000:
+                if self.elapsed_min > 500_000:
                     print("WARNING: Simulation exceeded 500 000 minutes — aborting.")
                     break
 
-            log.write(sep + "\n")
-            h, m  = divmod(self.t, 60)
-            dist  = math.hypot(self.bx - self.x, self.by - self.y)
+            log.write(separator + "\n")
+            hours, minutes = divmod(self.elapsed_min, 60)
+            distance_km    = math.hypot(self.goal_x - self.x, self.goal_y - self.y)
             footer = (
-                f"\nArrival time  : {self.t} min  ({h} h {m} min)\n"
+                f"\nArrival time  : {self.elapsed_min} min  ({hours} h {minutes} min)\n"
                 f"Final position: ({self.x/100:.5f}, {self.y/100:.5f})  [units of 100 km]\n"
-                f"Distance to B : {dist/100:.5f} units  ({dist:.3f} km)"
+                f"Distance to B : {distance_km/100:.5f} units  ({distance_km:.3f} km)"
             )
             log.write(footer + "\n")
-            print(sep)
+            print(separator)
             print(footer)

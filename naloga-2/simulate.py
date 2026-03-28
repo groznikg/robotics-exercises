@@ -36,11 +36,11 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        ax   = float(sys.argv[1]) * 100.0
-        ay   = float(sys.argv[2]) * 100.0
-        bx   = float(sys.argv[3]) * 100.0
-        by   = float(sys.argv[4]) * 100.0
-        phi0 = float(sys.argv[5])
+        start_x           = float(sys.argv[1]) * 100.0
+        start_y           = float(sys.argv[2]) * 100.0
+        goal_x            = float(sys.argv[3]) * 100.0
+        goal_y            = float(sys.argv[4]) * 100.0
+        initial_heading_deg = float(sys.argv[5])
     except ValueError:
         print("Error: numeric arguments expected for coordinates and heading.")
         sys.exit(1)
@@ -51,20 +51,20 @@ def main() -> None:
         print(f"Error: {e}")
         sys.exit(1)
 
-    total_km = math.hypot(bx - ax, by - ay)
+    route_length_km = math.hypot(goal_x - start_x, goal_y - start_y)
 
     print("Ship Navigation Simulator - Exercise 2")
     print("=" * 40)
-    print(f"  A = ({ax/100:.3f}, {ay/100:.3f})  ->  B = ({bx/100:.3f}, {by/100:.3f})  [100 km]")
-    print(f"  Initial heading : {phi0:.1f} deg")
-    print(f"  A->B distance   : {total_km/100:.4f} units  ({total_km:.1f} km)")
+    print(f"  A = ({start_x/100:.3f}, {start_y/100:.3f})  ->  B = ({goal_x/100:.3f}, {goal_y/100:.3f})  [100 km]")
+    print(f"  Initial heading : {initial_heading_deg:.1f} deg")
+    print(f"  A->B distance   : {route_length_km/100:.4f} units  ({route_length_km:.1f} km)")
     print(f"  Wind intervals  : {len(wind)}  (repeating)")
     print()
 
     log_path = "simulation_log.txt"
     print(f"  Full log        : {log_path}\n")
 
-    sim = ShipSimulator(ax, ay, bx, by, phi0, wind)
+    sim = ShipSimulator(start_x, start_y, goal_x, goal_y, initial_heading_deg, wind)
     sim.run(log_path)
 
 

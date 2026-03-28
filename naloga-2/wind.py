@@ -15,14 +15,16 @@ class WindData:
         Header lines (non-numeric first token) and blank lines are skipped.
         """
         self._winds: list[tuple[float, float]] = []
-        with open(path, encoding="utf-8") as fh:
-            for raw in fh:
-                parts = raw.split()
-                if len(parts) < 3:
+        with open(path, encoding="utf-8") as file:
+            for line in file:
+                tokens = line.split()
+                if len(tokens) < 3:
                     continue
                 try:
-                    float(parts[0])
-                    self._winds.append((float(parts[1]), float(parts[2])))
+                    float(tokens[0])
+                    speed_kmh   = float(tokens[1])
+                    direction_deg = float(tokens[2])
+                    self._winds.append((speed_kmh, direction_deg))
                 except ValueError:
                     continue
         if not self._winds:
@@ -33,6 +35,6 @@ class WindData:
 
     def vector_at(self, t_min: int) -> tuple[float, float]:
         """Return wind velocity (vx, vy) km/h at simulation time t_min [minutes]."""
-        speed, deg = self._winds[(t_min // 60) % len(self._winds)]
-        rad = math.radians(deg)
-        return speed * math.cos(rad), speed * math.sin(rad)
+        speed_kmh, direction_deg = self._winds[(t_min // 60) % len(self._winds)]
+        direction_rad = math.radians(direction_deg)
+        return speed_kmh * math.cos(direction_rad), speed_kmh * math.sin(direction_rad)

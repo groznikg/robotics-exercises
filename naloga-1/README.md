@@ -2,7 +2,7 @@
 
 WASD upravljanje turtlesim želve, napisano v C#. Teče v Dockerju, tako da ni treba nameščati ROS2 lokalno.
 
-Testirano na macOS, Windows in Linux sta nepreverjeni.
+Testirano na macOS, Windows in Linux sta nepreverjena.
 
 ---
 
@@ -10,7 +10,7 @@ Testirano na macOS, Windows in Linux sta nepreverjeni.
 
 ### macOS
 
-1. **Docker Desktop** – če ga še nimaš, ga prenesi in zaženi. Počakaj da se pojavi kit v menijski vrstici.
+1. **Docker Desktop** – če ga še nimaš, ga prenesi in zaženi
 
 2. **XQuartz** – brez tega se grafično okno ne odpre:
    ```bash
@@ -126,7 +126,7 @@ Ni treba prevajati – samo shrani in znova zaženi `docker compose up`.
 
 ## Kako deluje
 
-turtlesim teče kot ena Docker storitev, teleop kot druga. C# aplikacija terminal postavi v raw mode (pritiske tipk bere brez Entera), jih pretvori v `geometry_msgs/Twist` sporočila in jih pošlje prek rosbridge WebSocket-a na `ws://localhost:9090` – tako ne rabimo izvornih RCL vezav za .NET.
+turtlesim teče kot ena Docker storitev, teleop kot druga. C# aplikacija terminal postavi v raw mode, jih pretvori v `geometry_msgs/Twist` sporočila in jih pošlje prek rosbridge WebSocket-a na `ws://localhost:9090` – tako ne rabimo izvornih RCL vezav za .NET.
 
 ---
 

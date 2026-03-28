@@ -1,58 +1,47 @@
 # TurtleBot WASD Teleop – ROS2 Jazzy
 
-Upravljanje želve s tipkovnico WASD za `turtlesim`, implementirano v **C#** na **ROS2 Jazzy Jalisco**.
-Deluje v Dockerju – lokalna namestitev ROS2 ni potrebna. Podprti sistemi: **macOS**, **Linux** in **Windows WSL2**.
+WASD upravljanje turtlesim želve, napisano v C#. Teče v Dockerju, tako da ni treba nameščati ROS2 lokalno.
+
+Testirano na macOS, Windows in Linux sta nepreverjeni.
 
 ---
 
-## Predpogoji
+## Kaj rabiš
 
-### macOS - Testirano
+### macOS
 
-1. **Docker Desktop**
-   - Prenesi in namesti z https://www.docker.com/products/docker-desktop/
-   - Odpri Docker Desktop in počakaj, da se prikaže "Docker Desktop is running" (ikona kita v menijski vrstici)
+1. **Docker Desktop** – če ga še nimaš, ga prenesi in zaženi. Počakaj da se pojavi kit v menijski vrstici.
 
-2. **XQuartz** (X11 strežnik – potreben za prikaz grafičnega okna turtlesim)
+2. **XQuartz** – brez tega se grafično okno ne odpre:
    ```bash
    brew install --cask xquartz
    ```
-   > **Pomembno:** Po namestitvi XQuartz se moraš **odjaviti in znova prijaviti**.
-   > XQuartz se registrira pri macOS window serverju ob prijavi – brez tega koraka ne bo deloval.
+   > Po namestitvi se moraš odjaviti in znova prijaviti, drugače XQuartz ne bo deloval.
 
-3. **Varnostna nastavitev XQuartz** (dovoli omrežne povezave)
-   - Odpri XQuartz → Preferences → zavihek Security
-   - Obkljukaj **"Allow connections from network clients"**
-   - Znova zaženi XQuartz
+3. V XQuartz → Preferences → Security obkljukaj **"Allow connections from network clients"** in ga znova zaženi.
 
-### Windows (WSL2) - Nepreverjeno
+### Windows (WSL2)
 
-1. **WSL2 z Ubuntu**
+1. WSL2 + Ubuntu:
    ```powershell
-   # Zaženi v PowerShell kot Administrator
+   # kot Administrator
    wsl --install
-   # Ko se zahteva, znova zaženi računalnik
    ```
 
-2. **Docker Desktop z WSL2 zaledjem**
-   - Prenesi z https://www.docker.com/products/docker-desktop/
-   - Med namestitvijo omogoči "Use WSL2 based engine"
-   - V Docker Desktop → Settings → Resources → WSL Integration → omogoči svojo Ubuntu distribucijo
+2. Docker Desktop z WSL2 – med namestitvijo izberi "Use WSL2 based engine", nato v Settings → Resources → WSL Integration omogoči svojo Ubuntu distribucijo.
 
-3. **WSLg** (podpora za GUI – vgrajena v Windows 11 in Windows 10 21H2+)
-   - Dodatnih korakov ni; `DISPLAY` se znotraj WSL nastavi samodejno
+3. WSLg (GUI podpora) je vgrajen v Windows 11 in 10 21H2+, `DISPLAY` se nastavi sam.
 
-### Linux - Nepreverjeno
+### Linux
 
-1. **Docker** + **docker compose plugin**
-   ```bash
-   sudo apt install docker.io docker-compose-plugin
-   sudo usermod -aG docker $USER   # po tem se odjavi in znova prijavi
-   ```
+```bash
+sudo apt install docker.io docker-compose-plugin
+sudo usermod -aG docker $USER  # potem se odjavi in prijavi
+```
 
 ---
 
-## Hiter zagon
+## Zagon
 
 ### macOS
 ```bash
@@ -60,14 +49,9 @@ cd /pot/do/Robotics
 ./run_mac.sh
 ```
 
-Skripta bo:
-- Preverila, ali je XQuartz nameščen
-- Zagnala XQuartz, če še ne teče
-- Zaznala IP gostitelja in dovolila Docker dostop do X11
-- Zgradila Docker sliko (samo ob prvem zagonu, ~5–10 min)
-- Zagnala GUI turtlesim + terminal za upravljanje
+Skripta sama preveri XQuartz, nastavi X11 dostop in zgradi sliko ob prvem zagonu (~5–10 min).
 
-### Windows (WSL2 terminal)
+### Windows (WSL2)
 ```bash
 cd /pot/do/Robotics
 ./run_wsl.sh
@@ -82,23 +66,23 @@ docker compose up
 
 ---
 
-## Upravljanje
+## Tipke
 
-| Tipka | Ukaz |
-|-------|------|
+| Tipka | Akcija |
+|-------|--------|
 | `W` | Naprej |
 | `S` | Nazaj |
 | `A` | Rotacija levo |
 | `D` | Rotacija desno |
 | `Q` | Izhod |
 
-Vsaka druga tipka pošlje ukaz **stop** (ničelna hitrost).
+Karkoli drugega pošlje stop.
 
 ---
 
-## Nastavitev tipk
+## Sprememba tipk / hitrosti
 
-Uredi datoteko `ros2_ws/src/turtle_teleop_wasd/config/keybindings.json`:
+Uredi `ros2_ws/src/turtle_teleop_wasd/config/keybindings.json`:
 
 ```json
 {
@@ -112,10 +96,7 @@ Uredi datoteko `ros2_ws/src/turtle_teleop_wasd/config/keybindings.json`:
 }
 ```
 
-Ponovnega prevajanja ni potrebno – datoteka je ob zagonu priključena v vsebnik. Samo uredi in znova zaženi:
-```bash
-docker compose up
-```
+Ni treba prevajati – samo shrani in znova zaženi `docker compose up`.
 
 ---
 
@@ -123,43 +104,38 @@ docker compose up
 
 ```
 .
-├── Dockerfile                        # Slika ROS2 Jazzy + turtlesim + teleop paket
-├── docker-compose.yml                # Storitve: turtlesim (GUI) + teleop (tipkovnica)
-├── entrypoint.sh                     # Nastavi ROS2 okolje znotraj vsebnika
-├── run_mac.sh                        # Zaganjalnik za macOS
-├── run_wsl.sh                        # Zaganjalnik za Windows WSL2
-├── README.md                         # Ta datoteka
+├── Dockerfile                        # ROS2 Jazzy + turtlesim + teleop paket
+├── docker-compose.yml                # turtlesim (GUI) + teleop (tipkovnica)
+├── entrypoint.sh                     # nastavi ROS2 okolje v vsebniku
+├── run_mac.sh
+├── run_wsl.sh
+├── README.md
 └── ros2_ws/
     └── src/
         └── turtle_teleop_wasd/
             └── TurtleTeleop/
-                ├── Program.cs          # Glavna logika upravljanja
-                ├── KeyBindings.cs      # Nalaganje konfiguracije
-                ├── Terminal.cs         # Neobdelani terminalski V/I
+                ├── Program.cs          # glavna logika
+                ├── KeyBindings.cs      # branje konfiguracije
+                ├── Terminal.cs         # raw terminal I/O
                 ├── TurtleTeleop.csproj
                 └── config/
-                    └── keybindings.json  # Konfiguracija tipk in hitrosti
+                    └── keybindings.json
 ```
 
 ---
 
 ## Kako deluje
 
-1. Storitev **turtlesim** zažene standardni ROS2 grafični simulator želve.
-2. Storitev **teleop** zažene vozlišče `turtle_teleop_wasd`, ki:
-   - Terminal preklopi v **raw način**, da se posamezni pritiski tipk berejo brez pritiska Enter.
-   - Vsak pritisk tipke preslika v sporočilo `geometry_msgs/Twist` na temi `/turtle1/cmd_vel`.
-   - Nastavitve tipk in hitrosti se ob zagonu naložijo iz `keybindings.json`.
-3. Aplikacija C# se poveže z **rosbridge** (WebSocket na vratih 9090) za objavo sporočil hitrosti brez izvornih RCL vezav.
+turtlesim teče kot ena Docker storitev, teleop kot druga. C# aplikacija terminal postavi v raw mode (pritiske tipk bere brez Entera), jih pretvori v `geometry_msgs/Twist` sporočila in jih pošlje prek rosbridge WebSocket-a na `ws://localhost:9090` – tako ne rabimo izvornih RCL vezav za .NET.
 
 ---
 
-## Odpravljanje težav
+## Pogoste težave
 
 | Težava | Rešitev |
 |--------|---------|
-| `Cannot connect to Docker daemon` | Odpri Docker Desktop in počakaj, da se popolnoma zažene |
-| `Unable to find application named 'XQuartz'` | Zaženi `brew install --cask xquartz`, nato se odjavi in znova prijavi |
-| Okno turtlesim se ne prikaže | XQuartz → Preferences → Security → omogoči "Allow connections from network clients", znova zaženi XQuartz |
-| Tipkovnica ne deluje | Klikni okno terminala teleop, da mu daš fokus |
-| `xhost: command not found` | XQuartz ga namesti v `/opt/X11/bin/xhost`, kar privzeto ni v PATH – skripta samodejno uporablja polno pot |
+| `Cannot connect to Docker daemon` | Docker Desktop še ni zagnan |
+| `Unable to find application named 'XQuartz'` | `brew install --cask xquartz`, nato se odjavi in prijavi |
+| Okno turtlesim se ne odpre | XQuartz → Preferences → Security → "Allow connections from network clients" |
+| Tipkovnica ne reagira | Klikni na teleop terminal da dobi fokus |
+| `xhost: command not found` | XQuartz ga namesti v `/opt/X11/bin/xhost` – skripta to že upošteva |

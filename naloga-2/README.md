@@ -1,34 +1,23 @@
 # Naloga 2 – Simulator plovbe ladje
 
-## Algoritem (1. del)
+## Algoritem
 
-### Opis problema
-Tovorna ladja pluje od točke **A** do točke **B** v 2D ravnini (enota: 100 km).
-Začne iz mirovanja in je izpostavljena vetru, ki premika njeno efektivno hitrost.
+Tovorna ladja pluje od točke A do točke B v 2D ravnini (enota: 100 km). Začne iz mirovanja, izpostavljena je vetru.
 
-### Krmilna zanka (minutni intervali)
+Vsako minuto simulator naredi naslednje:
 
-Ladja začne pri točki A v mirovanju z začetno orientacijo. Vsako minuto izvede naslednje korake:
-
-1. **Določi željeno smer** — iz trenutnega položaja izračuna kot, ki kaže direktno proti cilju B.
-
-2. **Prilagodi smer plovbe** — zavije proti željeni smeri, vendar največ 5° na minuto. Če je razlika večja, se zavijanje razporedi čez več minut.
-
-3. **Prilagodi hitrost** — če je ladja dovolj blizu cilja, da bo pri polnem zaviranju še pravočasno ustavila, začne zavirati (zmanjša hitrost za 2 km/h). Sicer pospeši do maksimalnih 30 km/h.
-
-4. **Upošteva veter** — iz datoteke prebere vetrovni vpliv za trenutno uro. Veter se vektorsko doda hitrosti ladje — ladjo odriva v smeri pihanja ne glede na njeno orientacijo. Če je plovba daljša od datoteke, se vnosi ponavljajo ciklično.
-
-5. **Posodobi položaj** — na podlagi trenutne smeri, hitrosti in vetra izračuna nov položaj po eni minuti.
-
-6. **Preveri prihod** — ko se ladja dovolj približa točki B (manj kot 0,5 km), je plovba zaključena in program izpiše skupni čas potovanja.
-
-**Razdalja zaustavljanja** se izračuna iz kinematike diskretnega zaviranja: pri hitrosti v in pojemku 2 km/h na minuto ladja potrebuje v²/240 km za zaustavitev.
+1. Izračuna smer proti cilju B.
+2. Zavije proti tej smeri – največ 5° na minuto, torej pri večjih kotih traja več minut.
+3. Pospeši do max 30 km/h. Ko je dovolj blizu, da pri zaviranju (2 km/h na minuto) še pravočasno ustavi, začne zavirati. Razdalja zaustavljanja je v·(v+2)/(240) km (eksaktni diskretni seštevek korakov po 2 km/h).
+4. Doda vetrovni vpliv iz datoteke za trenutno uro – veter se prišteje vektorsko, ne glede na orientacijo ladje. Če je plovba daljša od datoteke, se vnosi ponavljajo.
+5. Posodobi položaj.
+6. Preveri ali je ladja znotraj 0,5 km od B – če ja, konec.
 
 ---
 
 ## Zahteve
 
-- Python 3.10+  (brez zunanjih paketov)
+Python 3.10+, brez zunanjih paketov.
 
 ---
 
@@ -38,12 +27,12 @@ Ladja začne pri točki A v mirovanju z začetno orientacijo. Vsako minuto izved
 python3 simulate.py x0 y0 xk yk phi0 vetrna_datoteka
 ```
 
-| Argument         | Opis                                                        |
-|------------------|-------------------------------------------------------------|
-| `x0 y0`          | Začetna točka A  (enote 100 km)                            |
-| `xk yk`          | Ciljna točka B  (enote 100 km)                             |
-| `phi0`           | Začetna orientacija v stopinjah (0° = Vzhod, 90° = Sever, CCW) |
-| `vetrna_datoteka`| Pot do datoteke z vetrnimi podatki                         |
+| Argument | Opis |
+|----------|------|
+| `x0 y0` | Začetna točka A (enote 100 km) |
+| `xk yk` | Ciljna točka B (enote 100 km) |
+| `phi0` | Začetna orientacija v stopinjah (0° = Vzhod, 90° = Sever, CCW) |
+| `vetrna_datoteka` | Pot do datoteke z vetrnimi podatki |
 
 ### Format vetrne datoteke
 
@@ -54,24 +43,19 @@ N   hitrost[km/h]   smer[°]
 ...
 ```
 
-- Glava (začne z ne-numeričnim znakom) se samodejno preskoči.
-- Smer: kam veter **piha** (0° = Vzhod, 90° = Sever).
+Vrstica z glavo (začne z ne-numeričnim znakom) se preskoči. Smer pove kam veter **piha** (0° = Vzhod, 90° = Sever).
 
 ---
 
 ## Izhod
 
-### Terminal
-Stanje ladje se izpisuje **vsako uro (60 minut)** in ob prihodu.
+V terminalu se stanje izpiše vsako uro in ob prihodu. Celoten minutni log se zapiše v `simulation_log.txt`.
 
-### Dnevniška datoteka
-Celoten **minutni log** se samodejno zapiše v `simulation_log.txt`.
-
-## Primer zagona
+## Primer
 
 ```bash
 bash run_example.sh
-# ali neposredno:
+# ali direktno:
 python3 simulate.py 0 0 3 4 53 wind.txt
 ```
 
@@ -87,18 +71,18 @@ python3 simulate.py 0 0 3 4 53 wind.txt
 Arrival time  : 940 min  (15 h 40 min)
 ```
 
-Stolpec **Odmik od trase** prikazuje pravokotno razdaljo ladje od idealne premice A–B.
+Stolpec "Odmik od trase" je pravokotna razdalja od idealne premice A–B.
 
 ---
 
 ## Testne vetrne datoteke
 
-Mapa `test-winds/` vsebuje pripravljene scenarije za testiranje:
+V mapi `test-winds/`:
 
-| Datoteka            | Opis                                      |
-|---------------------|-------------------------------------------|
-| `wind_zero.txt`     | Brez vetra                                |
-| `wind_tailwind.txt` | Zarepni veter 20 km/h (~53°)              |
-| `wind_headwind.txt` | Čelni veter 15 km/h (233°)               |
-| `wind_crosswind.txt`| Bočni veter 25 km/h (pravokotno na traso) |
-| `wind_changing.txt` | Spremenljiv veter, 6 smeri               |
+| Datoteka | Opis |
+|----------|------|
+| `wind_zero.txt` | Brez vetra |
+| `wind_tailwind.txt` | Zarepni veter 20 km/h (~53°) |
+| `wind_headwind.txt` | Čelni veter 15 km/h (233°) |
+| `wind_crosswind.txt` | Bočni veter 25 km/h (pravokotno na traso) |
+| `wind_changing.txt` | Spremenljiv veter, 6 smeri |

@@ -96,7 +96,7 @@ Uredi `ros2_ws/src/turtle_teleop_wasd/config/keybindings.json`:
 }
 ```
 
-Ni treba prevajati – samo shrani in znova zaženi `docker compose up`.
+Shrani in znova zaženi `docker compose up`.
 
 ---
 
@@ -106,7 +106,7 @@ Ni treba prevajati – samo shrani in znova zaženi `docker compose up`.
 .
 ├── Dockerfile                        # ROS2 Jazzy + turtlesim + teleop paket
 ├── docker-compose.yml                # turtlesim (GUI) + teleop (tipkovnica)
-├── entrypoint.sh                     # nastavi ROS2 okolje v vsebniku
+├── entrypoint.sh                     # nastavi ROS2 okolje
 ├── run_mac.sh
 ├── run_wsl.sh
 ├── README.md
@@ -126,7 +126,7 @@ Ni treba prevajati – samo shrani in znova zaženi `docker compose up`.
 
 ## Kako deluje
 
-turtlesim teče kot ena Docker storitev, teleop kot druga. C# aplikacija terminal postavi v raw mode, jih pretvori v `geometry_msgs/Twist` sporočila in jih pošlje prek rosbridge WebSocket-a na `ws://localhost:9090` – tako ne rabimo izvornih RCL vezav za .NET.
+turtlesim teče kot ena Docker storitev, teleop kot druga. C# aplikacija terminal postavi v raw mode, jih pretvori v `geometry_msgs/Twist` sporočila in jih pošlje prek rosbridge WebSocket-a na `ws://localhost:9090`.
 
 ---
 

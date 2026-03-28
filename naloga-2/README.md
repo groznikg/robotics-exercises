@@ -8,7 +8,7 @@ Vsako minuto simulator naredi naslednje:
 
 1. Izračuna smer proti cilju B.
 2. Zavije proti tej smeri – največ 5° na minuto, torej pri večjih kotih traja več minut.
-3. Pospeši do max 30 km/h. Ko je dovolj blizu, da pri zaviranju (2 km/h na minuto) še pravočasno ustavi, začne zavirati. Razdalja zaustavljanja je v·(v+2)/(240) km (eksaktni diskretni seštevek korakov po 2 km/h).
+3. Pospeši do max 30 km/h. Ko je dovolj blizu, da pri zaviranju (2 km/h na minuto) še pravočasno ustavi, začne zavirati.
 4. Doda vetrovni vpliv iz datoteke za trenutno uro – veter se prišteje vektorsko, ne glede na orientacijo ladje. Če je plovba daljša od datoteke, se vnosi ponavljajo.
 5. Posodobi položaj.
 6. Preveri ali je ladja znotraj 0,5 km od B – če ja, konec.
@@ -31,7 +31,7 @@ python3 simulate.py x0 y0 xk yk phi0 vetrna_datoteka
 |----------|------|
 | `x0 y0` | Začetna točka A (enote 100 km) |
 | `xk yk` | Ciljna točka B (enote 100 km) |
-| `phi0` | Začetna orientacija v stopinjah (0° = Vzhod, 90° = Sever, CCW) |
+| `phi0` | Začetna orientacija v stopinjah (0° = Vzhod, 90° = Sever) |
 | `vetrna_datoteka` | Pot do datoteke z vetrnimi podatki |
 
 ### Format vetrne datoteke

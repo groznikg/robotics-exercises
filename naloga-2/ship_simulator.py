@@ -87,12 +87,13 @@ class ShipSimulator:
         # 3. Wind at current time
         wind_x, wind_y = self.wind.vector_at(self.elapsed_min)
 
-        # 4. Speed control
-        heading_rad      = math.radians(self.heading_deg)
-        tailwind_kmh     = wind_x * math.cos(heading_rad) + wind_y * math.sin(heading_rad)
-        forward_speed_kmh = self.engine_speed_kmh + tailwind_kmh
-        distance_km      = math.hypot(self.goal_x - self.x, self.goal_y - self.y)
-        if self._stopping_distance_km(max(0.0, forward_speed_kmh)) >= distance_km:
+        # 4. Speed control — deceleration decision based on engine speed only,
+        #    so wind doesn't cause premature braking or unnecessary re-acceleration.
+        heading_rad  = math.radians(self.heading_deg)
+        tailwind_kmh = wind_x * math.cos(heading_rad) + wind_y * math.sin(heading_rad)
+        distance_km  = math.hypot(self.goal_x - self.x, self.goal_y - self.y)
+        if self._stopping_distance_km(self.engine_speed_kmh) >= distance_km:
+            # Braking: keep enough engine thrust to avoid being pushed backward by headwind.
             min_engine_speed_kmh  = max(0.0, -tailwind_kmh + 1.0)
             self.engine_speed_kmh = max(min_engine_speed_kmh,
                                         self.engine_speed_kmh - self.MAX_ACCEL)

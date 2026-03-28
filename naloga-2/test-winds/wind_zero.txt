@@ -1,0 +1,4 @@
+# Wind data – no wind (zero wind test)
+# Format: N   speed[km/h]   direction[°]
+N   speed   direction
+1   0       0

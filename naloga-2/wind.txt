@@ -1,0 +1,10 @@
+# Wind data – each row = 1-hour interval
+# Format: N   speed[km/h]   direction[°]
+# Direction convention: 0°=East, 90°=North (counter-clockwise)
+N   speed   direction
+1   10      90
+2   5       30
+3   7       -75
+4   2       -90
+5   8       180
+6   12      45

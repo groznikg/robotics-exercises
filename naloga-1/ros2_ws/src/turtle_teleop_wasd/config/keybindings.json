@@ -1,0 +1,9 @@
+{
+  "key_forward": "w",
+  "key_backward": "s",
+  "key_left": "a",
+  "key_right": "d",
+  "key_quit": "q",
+  "linear_speed": 2.0,
+  "angular_speed": 2.0
+}

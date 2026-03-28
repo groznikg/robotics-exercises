@@ -1,0 +1,15 @@
+# ─── Usage ────────────────────────────────────────────────────────────────────
+# macOS       : ./run_mac.sh
+# Linux / WSL : ./run_wsl.sh
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # Only one service defines the build – both use the same image tag.
+  # Having build: in both caused Docker to build the image twice.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: turtle_teleop_wasd
+    volumes:
+      - ./ros2_ws/src/turtle_teleop_wasd/config/keybindings.json:/ros2_ws/src/turtle_teleop_wasd/config/keybindings.json:ro

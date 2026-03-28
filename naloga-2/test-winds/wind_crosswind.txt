@@ -1,0 +1,4 @@
+# Wind data – strong crosswind (perpendicular to travel, from south)
+# Format: N   speed[km/h]   direction[°]
+N   speed   direction
+1   25      -37

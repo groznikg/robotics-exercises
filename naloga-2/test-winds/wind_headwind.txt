@@ -1,0 +1,4 @@
+# Wind data – strong headwind (against travel direction, from B toward A)
+# Format: N   speed[km/h]   direction[°]
+N   speed   direction
+1   15      233

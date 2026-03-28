@@ -1,0 +1,4 @@
+# Wind data – strong tailwind (toward B at ~53 deg)
+# Format: N   speed[km/h]   direction[°]
+N   speed   direction
+1   20      53

@@ -23,10 +23,11 @@ class ShipSimulator:
         self.wind = wind
 
         # State
-        self.x, self.y       = start_x, start_y
-        self.heading_deg     = initial_heading_deg
+        self.x, self.y        = start_x, start_y
+        self.heading_deg      = initial_heading_deg
         self.engine_speed_kmh = 0.0
-        self.elapsed_min     = 0
+        self.elapsed_min      = 0
+        self.max_deviation_km = 0.0
 
     @staticmethod
     def _angle_diff(target_deg: float, current_deg: float) -> float:
@@ -125,6 +126,7 @@ class ShipSimulator:
             while True:
                 distance_km  = math.hypot(self.goal_x - self.x, self.goal_y - self.y)
                 deviation_km = self._line_deviation_km()
+                self.max_deviation_km = max(self.max_deviation_km, deviation_km)
 
                 if self.elapsed_min != last_logged_min:
                     row = self._format_row(distance_km, deviation_km, ground_speed_kmh)
